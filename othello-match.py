@@ -5,12 +5,14 @@ import time
 import random
 from copy import deepcopy
 
+from requests import delete
+
 # Variable setup
 moves = 0
 
 # Tkinter setup
 root = tkinter.Tk()
-screen = tkinter.Canvas(root, width=500, height=600, background="#222", highlightthickness=0)
+screen = tkinter.Canvas(root, width=500, height=800, background="#222", highlightthickness=0)
 screen.pack()
 
 decentHeuristicMatrix = [
@@ -32,11 +34,10 @@ betterHeuristicMatrix = [
             [  -3,   -1,   1,   1,   1,   1,   -1,   -3],
             [   5,   -3,   3,   3,   3,   3,   -3,    5]]
 
-class PvEBoard:
-    def __init__(self, humanTurn):
+class EvEBoard:
+    def __init__(self, firstPlayer, secondPlayer):
         # White goes first (0 is white and player, 1 is black and computer)
-        
-        self.humanTurn = humanTurn
+        self.playerAI = [firstPlayer, secondPlayer]
         self.player = 0
         self.passed = False
         self.won = False
@@ -59,7 +60,6 @@ class PvEBoard:
 
         # Initializing old values
         self.oldarray = self.array
-        self.level = 0
 
     def visualUpdate(self):
         screen.delete("highlight")
@@ -143,67 +143,53 @@ class PvEBoard:
         # Drawing of highlight circles
         for x in range(8):
             for y in range(8):
-                if self.player == self.humanTurn:
-                    if self.valid(self.array, self.player, x, y):
-                        screen.create_oval(68 + 50 * x, 68 + 50 * y, 32 + 50 * (x + 1), 32 + 50 * (y + 1),
-                                           tags="highlight", fill="#008000", outline="#008000")
+                if self.valid(self.array, self.player, x, y):
+                    screen.create_oval(68 + 50 * x, 68 + 50 * y, 32 + 50 * (x + 1), 32 + 50 * (y + 1),
+                                        tags="highlight", fill="#008000", outline="#008000")
 
     # Updating the board to the screen
     def update(self):
+        global running
+        if not running:
+            return False
         self.visualUpdate()
         if not self.won:
             # Draw the scoreboard and update the screen
             self.drawScoreBoard()
             screen.update()
-            # If the player is AI, make a move
-            if self.player != self.humanTurn:
-                startTime = time.time()
-                self.oldarray = self.array
-                alphaBetaResult = self.MNABMove(self.array, 5, -float("inf"), float("inf"), 1)
-                self.array = alphaBetaResult[1]
+            
+            startTime = time.time()
+            self.oldarray = self.array
+            AImove = []
+            if self.playerAI[self.player] == 0:
+                AImove = self.randomMove(self.array)
+            else:
+                AImove = self.MNABMove(self.array, 5, -float("inf"), float("inf"), 1)
+            self.array = AImove[1]
 
-                if len(alphaBetaResult) == 3:
-                    position = alphaBetaResult[2]
-                    if self.humanTurn == 0:
-                        self.oldarray[position[0]][position[1]] = "w"
-                    else:
-                        self.oldarray[position[0]][position[1]] = "b"
+            if len(AImove) == 3:
+                position = AImove[2]
+                if self.player == 0:
+                    self.oldarray[position[0]][position[1]] = "b"
+                else:
+                    self.oldarray[position[0]][position[1]] = "w"
 
-                self.player = 1 - self.player
-                deltaTime = round((time.time() - startTime) * 100) / 100
-                if deltaTime < 2:
-                    time.sleep(2 - deltaTime)
-                self.drawScoreBoard()
-                self.visualUpdate()
-                self.oldarray = self.array
-                # Player must pass?
-                self.passTest()
-
+            self.player = 1 - self.player
+            deltaTime = round((time.time() - startTime) * 100) / 100
+            if deltaTime < 2:
+                time.sleep(2 - deltaTime)
+            self.drawScoreBoard()
+            self.visualUpdate()
+            self.oldarray = self.array
+            # Player must pass?
+            self.passTest()
         else:
             message = None
             if self.player_score > self.computer_score:
-                message = "The Human Player has won !"
+                message = "Player 1: " + str(self.playerAI[0]) + " wins"
             else:
-                message = "The AI has bested Humanity !"
+                message = "Player 2: " + str(self.playerAI[1]) + " wins"
             screen.create_text(250, 550, anchor="center", font=("Consolas", 15), text=message)
-
-    # Moves to position
-    def boardMove(self, x, y):
-        # Move and update screen
-        self.oldarray = self.array
-        if self.humanTurn == 0:
-            self.oldarray[x][y] = "b"
-        else:
-            self.oldarray[x][y] = "w"
-        self.array = self.move(self.array, x, y)
-
-        # Switch Player
-        self.player = 1 - self.player
-        self.update()
-
-        # Check if AI must pass
-        self.passTest()
-        self.update()
 
     # METHOD: Draws scoreboard to screen
     def drawScoreBoard(self):
@@ -214,22 +200,14 @@ class PvEBoard:
         # Scoring based on number of tiles
         self.player_score = 0
         self.computer_score = 0
-        hc = ""
-        cc = ""
-        if self.humanTurn == 0:
-            hc = "b"
-            cc = "w"
-        else:
-            hc = "w"
-            cc = "b"
         for x in range(8):
             for y in range(8):
-                if self.array[x][y] == hc:
+                if self.array[x][y] == "b":
                     self.player_score += 1
-                elif self.array[x][y] == cc:
+                elif self.array[x][y] == "w":
                     self.computer_score += 1
 
-        if self.player == self.humanTurn:
+        if self.player == 0:
             player_colour = "green"
             computer_colour = "gray"
         else:
@@ -247,12 +225,12 @@ class PvEBoard:
 
         moves = self.player_score + self.computer_score
 
-    # METHOD: Test if player must pass: if they do, switch the player
+    # METHOD: Test if player must pass: if they do, update the player
     def passTest(self):
         mustPass = True
         for x in range(8):
             for y in range(8):
-                if self.valid(self.array, self.player, x, y):
+                if self.valid(self.array, self.player , x, y):
                     mustPass = False
         if mustPass:
             self.player = 1 - self.player
@@ -260,12 +238,12 @@ class PvEBoard:
                 self.won = True
             else:
                 self.passed = True
-            self.update()
         else:
             self.passed = False
+        self.update()
 
     # METHOD: Random AI - Chooses a random move
-    def randomMove(self):
+    def randomMove(self, node):
         # Generates all possible moves
         choices = []
         for x in range(8):
@@ -273,8 +251,8 @@ class PvEBoard:
                 if self.valid(self.array, self.player, x, y):
                     choices.append([x, y])
         # Chooses a random move, moves there
-        dumbChoice = random.choice(choices)
-        return dumbChoice[0], dumbChoice[1]
+        randomChoice = random.choice(choices)
+        return [0, self.move(node, randomChoice[0], randomChoice[1]), randomChoice]
 
     # Alpha - Beta pruning on the Mini - Max Tree
     # http://en.wikipedia.org/wiki/Alpha%E2%80%93beta_pruning
@@ -291,9 +269,9 @@ class PvEBoard:
 
         # Final Stand
         if depth == 0 or len(choices) == 0:
-            if self.level == 1:
+            if self.playerAI[self.player] == 1:
                 return [self.betterHeuristic(node, maximizing), node]
-            elif self.level == 2:
+            elif self.playerAI[self.player] == 2:
                 return [self.decentHeuristic(node, maximizing), node]
             else:  # self.level == 3
                 return [self.dynamicHeuristic(node, maximizing), node]
@@ -398,9 +376,9 @@ class PvEBoard:
                     if self.valid(array, player, x, y):
                         numMoves += 1
             return numMoves + self.decentHeuristic(array, player)
-        elif moves <= 52 and self.checkCorner(array)<2:
+        elif moves <= 52 and self.checkCorner(array) < 2:
             return self.decentHeuristic(array, player)
-        elif moves <= 58 or self.checkCorner(array)<4:
+        elif moves <= 58 or self.checkCorner(array) < 4:
             return (2 * self.decentHeuristic(array, player) + 3 * self.simpleHeuristic(array,player)) / 5
         else:
             return self.simpleHeuristic(array, player)
@@ -466,7 +444,7 @@ class PvEBoard:
         # Must copy the passedArray so we don't alter the original
         array = deepcopy(passedArray)
         # Set colour and set the moved location to be that colour
-        if board.player == 0:
+        if self.player == 0:
             colour = "b"
         else:
             colour = "w"
@@ -555,27 +533,19 @@ def drawGridBackground(outline=False):
 def clickHandle(event):
     xMouse = event.x
     yMouse = event.y
-    if running:
-        if xMouse >= 450 and yMouse <= 50:
-            screen.delete(tkinter.ALL)
-            runMenu()
-        elif xMouse <= 50 and yMouse <= 50:
-            playGame(board.humanTurn, board.level)
-        else:
-            # Is it the player's turn?
-            if board.player == board.humanTurn:
-                # Delete the highlights
-                x = int((event.x - 50) / 50)
-                y = int((event.y - 50) / 50)
-                # Determine the grid index for where the mouse was clicked
-
-                # If the click is inside the bounds and the move is valid, move to that location
-                if 0 <= x <= 7 and 0 <= y <= 7:
-                    if board.valid(board.array, board.player, x, y):
-                        board.boardMove(x, y)
-    else:
+    if not running:
         # Difficulty clicking
         if 300 <= yMouse <= 350:
+            # One star
+            if 25 <= xMouse <= 155:
+                playGame(1,0)
+            # Two star
+            elif 180 <= xMouse <= 310:
+                playGame(2,0)
+            # Three star
+            elif 335 <= xMouse <= 465:
+                playGame(3,0)
+        if 400 <= yMouse <= 450:
             # One star
             if 25 <= xMouse <= 155:
                 playGame(0,1)
@@ -585,24 +555,34 @@ def clickHandle(event):
             # Three star
             elif 335 <= xMouse <= 465:
                 playGame(0,3)
-        if 400 <= yMouse <= 450:
+        if 500 <= yMouse <= 550:
             # One star
             if 25 <= xMouse <= 155:
-                playGame(1,1)
+                playGame(1,2)
             # Two star
             elif 180 <= xMouse <= 310:
-                playGame(1,2)
+                playGame(2,3)
             # Three star
             elif 335 <= xMouse <= 465:
+                playGame(3,1)
+        if 600 <= yMouse <= 650:
+            # One star
+            if 25 <= xMouse <= 155:
                 playGame(1,3)
-
-def keyHandle(event):
-    symbol = event.keysym
-    if symbol.lower() == "r":
-        playGame()
-    elif symbol.lower() == "q":
-        root.destroy()
-
+            # Two star
+            elif 180 <= xMouse <= 310:
+                playGame(3,2)
+            # Three star
+            elif 335 <= xMouse <= 465:
+                playGame(2,1)
+    else:
+        if xMouse >= 450 and yMouse <= 50:
+            runMenu()
+        elif xMouse <= 50 and yMouse <= 50:
+            del board
+            screen.delete(tkinter.ALL)
+            playGame(board.playerAI[0], board.playerAI[1])
+        
 def create_ingame_buttons():
     # Restart button
     # Background/shadow
@@ -625,56 +605,50 @@ def create_ingame_buttons():
 def runMenu():
     global running
     running = False
+    screen.delete(tkinter.ALL)
 
     # Title and shadow
     screen.create_text(250, 203, anchor="center", text="Othello", font=("Consolas", 50), fill="#aaa")
     screen.create_text(250, 200, anchor="center", text="Othello", font=("Consolas", 50), fill="#fff")
-    screen.create_text(75, 280, anchor="center", text="Go 1st", font=("Consolas", 20), fill="#fff")
-
-    # Creating the difficulty buttons
-    for i in range(3):
-        # Background
-        screen.create_rectangle(25 + 155 * i, 310, 155 + 155 * i, 355, fill="#000", outline="#000")
-        screen.create_rectangle(25 + 155 * i, 300, 155 + 155 * i, 350, fill="#111", outline="#111")
-        spacing = 130 / (i + 2)
-        for x in range(i + 1):
-            # Star with double shadow
-            screen.create_text(25 + (x + 1) * spacing + 155 * i, 325, anchor="center", text="\u2605",
-                               font=("Consolas", 25), fill="#b29600")
-            screen.create_text(25 + (x + 1) * spacing + 155 * i, 325, anchor="center", text="\u2605",
-                               font=("Consolas", 25), fill="#b29600")
-            screen.create_text(25 + (x + 1) * spacing + 155 * i, 325, anchor="center", text="\u2605",
-                               font=("Consolas", 25), fill="#ffd700")
     
-    screen.create_text(75, 380, anchor="center", text="Go 2nd", font=("Consolas", 20), fill="#fff")
-    for i in range(3):
-        # Background
-        screen.create_rectangle(25 + 155 * i, 410, 155 + 155 * i, 455, fill="#000", outline="#000")
-        screen.create_rectangle(25 + 155 * i, 400, 155 + 155 * i, 450, fill="#111", outline="#111")
-        spacing = 130 / (i + 2)
-        for x in range(i + 1):
-            # Star with double shadow
-            screen.create_text(25 + (x + 1) * spacing + 155 * i, 425, anchor="center", text="\u2605",
-                               font=("Consolas", 25), fill="#b29600")
-            screen.create_text(25 + (x + 1) * spacing + 155 * i, 425, anchor="center", text="\u2605",
-                               font=("Consolas", 25), fill="#b29600")
-            screen.create_text(25 + (x + 1) * spacing + 155 * i, 425, anchor="center", text="\u2605",
-                               font=("Consolas", 25), fill="#ffd700")
+    # Creating the difficulty buttons
+    for s in range(4):
+        text = ""
+        if s == 0:
+            text = "Random Go First"
+        elif s == 1:
+            text = "Random Go Second"
+        elif s == 2:
+            text = "AI vs AI (1)"
+        else:
+            text = "AI vs AI (2)"
+        screen.create_text(150, s*100 + 280, anchor="center", text=text, font=("Consolas", 20), fill="#fff")
+        for i in range(3):
+            # Background
+            screen.create_rectangle(25 + 155 * i, s*100 + 310, 155 + 155 * i, s*100 + 355, fill="#000", outline="#000")
+            screen.create_rectangle(25 + 155 * i, s*100 + 300, 155 + 155 * i, s*100 + 350, fill="#111", outline="#111")
+            spacing = 130 / (i + 2)
+            for x in range(i + 1):
+                # Star with double shadow
+                screen.create_text(25 + (x + 1) * spacing + 155 * i, s*100 +325, anchor="center", text="\u2605",
+                                font=("Consolas", 25), fill="#b29600")
+                screen.create_text(25 + (x + 1) * spacing + 155 * i, s*100 +325, anchor="center", text="\u2605",
+                                font=("Consolas", 25), fill="#b29600")
+                screen.create_text(25 + (x + 1) * spacing + 155 * i, s*100 + 325, anchor="center", text="\u2605",
+                                font=("Consolas", 25), fill="#ffd700")
     screen.update()
 
-def playGame(turn, level):
+def playGame(p1, p2):
     global board, running
     running = True
     screen.delete(tkinter.ALL)
     create_ingame_buttons()
-    board = 0
 
     # Draw the background
     drawGridBackground()
 
     # Create the board and update it
-    board = PvEBoard(turn)
-    board.selectLevel(level)
+    board = EvEBoard(p1, p2)
     board.update()
 
 def main():
@@ -682,7 +656,6 @@ def main():
 
     # Binding, setting
     screen.bind("<Button-1>", clickHandle)
-    screen.bind("<Key>", keyHandle)
     screen.focus_set()
 
     # Run forever
