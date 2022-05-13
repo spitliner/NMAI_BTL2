@@ -41,9 +41,15 @@ class EvEBoard:
         self.player = 0
         self.passed = False
         self.won = False
-
         self.player_score = 0
         self.computer_score = 0
+        self.time1 = time.time()
+        self.time2 = time.time()
+        self.e1 = 0
+        self.e2 = 0
+        self.move1 = 0
+        self.move2 = 0
+        
 
         # Initializing an empty board
         self.array = []
@@ -152,8 +158,8 @@ class EvEBoard:
         global running
         if not running:
             return False
-        self.visualUpdate()
         if not self.won:
+            starttime = time.time()
             # Draw the scoreboard and update the screen
             self.drawScoreBoard()
             screen.update()
@@ -162,12 +168,16 @@ class EvEBoard:
             self.oldarray = self.array
             AImove = []
             if self.playerAI[self.player] == 0:
+                print("Random AI go !")
                 AImove = self.randomMove(self.array)
             else:
+                print("AI", self.playerAI[self.player], " go !")
                 AImove = self.MNABMove(self.array, 5, -float("inf"), float("inf"), 1)
-            self.array = AImove[1]
-
+            if self.won:
+                self.update()
+            
             if len(AImove) == 3:
+                self.array = AImove[1]
                 position = AImove[2]
                 if self.player == 0:
                     self.oldarray[position[0]][position[1]] = "b"
@@ -175,19 +185,27 @@ class EvEBoard:
                     self.oldarray[position[0]][position[1]] = "w"
 
             self.player = 1 - self.player
-            deltaTime = round((time.time() - startTime) * 100) / 100
-            if deltaTime < 2:
-                time.sleep(2 - deltaTime)
+            if self.player == 0:
+                print(time.time(), starttime)
+                self.e1 += time.time() - starttime
+                self.move1 += 1
+            else:
+                print(time.time(), starttime)
+                self.e2 += time.time() - starttime
+                self.move2 += 1
             self.drawScoreBoard()
             self.visualUpdate()
             self.oldarray = self.array
-            # Player must pass?
             self.passTest()
         else:
             message = None
+            print("Time Elapsed Player 1: ", self.e1, " Total Move: ", self.move1) 
+            print("Time Elapsed Player 2: ", self.e2, " Total Move: ", self.move2)
             if self.player_score > self.computer_score:
+                print(self.player_score, self.computer_score, self.playerAI[0])
                 message = "Player 1: " + str(self.playerAI[0]) + " wins"
             else:
+                print(self.player_score, self.computer_score, self.playerAI[1])
                 message = "Player 2: " + str(self.playerAI[1]) + " wins"
             screen.create_text(250, 550, anchor="center", font=("Consolas", 15), text=message)
 
@@ -251,6 +269,9 @@ class EvEBoard:
                 if self.valid(self.array, self.player, x, y):
                     choices.append([x, y])
         # Chooses a random move, moves there
+        if choices == []:
+            self.won = True
+            return None
         randomChoice = random.choice(choices)
         return [0, self.move(node, randomChoice[0], randomChoice[1]), randomChoice]
 
@@ -259,7 +280,7 @@ class EvEBoard:
     def MNABMove(self, node, depth, alpha, beta, maximizing):
         boards = []
         choices = []
-
+    
         for x in range(8):
             for y in range(8):
                 if self.valid(self.array, self.player, x, y):
@@ -548,16 +569,6 @@ def clickHandle(event):
         if 400 <= yMouse <= 450:
             # One star
             if 25 <= xMouse <= 155:
-                playGame(0,1)
-            # Two star
-            elif 180 <= xMouse <= 310:
-                playGame(0,2)
-            # Three star
-            elif 335 <= xMouse <= 465:
-                playGame(0,3)
-        if 500 <= yMouse <= 550:
-            # One star
-            if 25 <= xMouse <= 155:
                 playGame(1,2)
             # Two star
             elif 180 <= xMouse <= 310:
@@ -565,7 +576,7 @@ def clickHandle(event):
             # Three star
             elif 335 <= xMouse <= 465:
                 playGame(3,1)
-        if 600 <= yMouse <= 650:
+        if 500 <= yMouse <= 550:
             # One star
             if 25 <= xMouse <= 155:
                 playGame(1,3)
@@ -579,7 +590,6 @@ def clickHandle(event):
         if xMouse >= 450 and yMouse <= 50:
             runMenu()
         elif xMouse <= 50 and yMouse <= 50:
-            del board
             screen.delete(tkinter.ALL)
             playGame(board.playerAI[0], board.playerAI[1])
         
@@ -612,7 +622,7 @@ def runMenu():
     screen.create_text(250, 200, anchor="center", text="Othello", font=("Consolas", 50), fill="#fff")
     
     # Creating the difficulty buttons
-    for s in range(4):
+    for s in range(3):
         text = ""
         if s == 0:
             text = "Random Go First"
@@ -620,8 +630,6 @@ def runMenu():
             text = "Random Go Second"
         elif s == 2:
             text = "AI vs AI (1)"
-        else:
-            text = "AI vs AI (2)"
         screen.create_text(150, s*100 + 280, anchor="center", text=text, font=("Consolas", 20), fill="#fff")
         for i in range(3):
             # Background

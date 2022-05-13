@@ -159,7 +159,7 @@ class PvEBoard:
             if self.player != self.humanTurn:
                 startTime = time.time()
                 self.oldarray = self.array
-                alphaBetaResult = self.MNABMove(self.array, 5, -float("inf"), float("inf"), 1)
+                alphaBetaResult = self.MNABMove(self.array, 4, -float("inf"), float("inf"), 1)
                 self.array = alphaBetaResult[1]
 
                 if len(alphaBetaResult) == 3:
@@ -585,16 +585,6 @@ def clickHandle(event):
             # Three star
             elif 335 <= xMouse <= 465:
                 playGame(0,3)
-        if 400 <= yMouse <= 450:
-            # One star
-            if 25 <= xMouse <= 155:
-                playGame(1,1)
-            # Two star
-            elif 180 <= xMouse <= 310:
-                playGame(1,2)
-            # Three star
-            elif 335 <= xMouse <= 465:
-                playGame(1,3)
 
 def keyHandle(event):
     symbol = event.keysym
@@ -629,7 +619,6 @@ def runMenu():
     # Title and shadow
     screen.create_text(250, 203, anchor="center", text="Othello", font=("Consolas", 50), fill="#aaa")
     screen.create_text(250, 200, anchor="center", text="Othello", font=("Consolas", 50), fill="#fff")
-    screen.create_text(75, 280, anchor="center", text="Go 1st", font=("Consolas", 20), fill="#fff")
 
     # Creating the difficulty buttons
     for i in range(3):
@@ -644,21 +633,6 @@ def runMenu():
             screen.create_text(25 + (x + 1) * spacing + 155 * i, 325, anchor="center", text="\u2605",
                                font=("Consolas", 25), fill="#b29600")
             screen.create_text(25 + (x + 1) * spacing + 155 * i, 325, anchor="center", text="\u2605",
-                               font=("Consolas", 25), fill="#ffd700")
-    
-    screen.create_text(75, 380, anchor="center", text="Go 2nd", font=("Consolas", 20), fill="#fff")
-    for i in range(3):
-        # Background
-        screen.create_rectangle(25 + 155 * i, 410, 155 + 155 * i, 455, fill="#000", outline="#000")
-        screen.create_rectangle(25 + 155 * i, 400, 155 + 155 * i, 450, fill="#111", outline="#111")
-        spacing = 130 / (i + 2)
-        for x in range(i + 1):
-            # Star with double shadow
-            screen.create_text(25 + (x + 1) * spacing + 155 * i, 425, anchor="center", text="\u2605",
-                               font=("Consolas", 25), fill="#b29600")
-            screen.create_text(25 + (x + 1) * spacing + 155 * i, 425, anchor="center", text="\u2605",
-                               font=("Consolas", 25), fill="#b29600")
-            screen.create_text(25 + (x + 1) * spacing + 155 * i, 425, anchor="center", text="\u2605",
                                font=("Consolas", 25), fill="#ffd700")
     screen.update()
 
