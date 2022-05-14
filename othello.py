@@ -159,7 +159,7 @@ class PvEBoard:
             if self.player != self.humanTurn:
                 startTime = time.time()
                 self.oldarray = self.array
-                alphaBetaResult = self.MNABMove(self.array, 5, -float("inf"), float("inf"), 1)
+                alphaBetaResult = self.MNABMove(self.array, 5, -math.inf, math.inf, 1)
                 self.array = alphaBetaResult[1]
 
                 if len(alphaBetaResult) == 3:
@@ -299,7 +299,7 @@ class PvEBoard:
                 return [self.dynamicHeuristic(node, maximizing), node]
 
         if maximizing:
-            v = -float("inf")
+            v = -math.inf
             bestBoard = []
             bestChoice = []
             for board in boards:
@@ -313,7 +313,7 @@ class PvEBoard:
                     break
             return [v, bestBoard, bestChoice]
         else:
-            v = float("inf")
+            v = math.inf
             bestBoard = []
             bestChoice = []
             for board in boards:

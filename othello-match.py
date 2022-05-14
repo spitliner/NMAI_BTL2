@@ -164,7 +164,7 @@ class EvEBoard:
             if self.playerAI[self.player] == 0:
                 AImove = self.randomMove(self.array)
             else:
-                AImove = self.MNABMove(self.array, 5, -float("inf"), float("inf"), 1)
+                AImove = self.MNABMove(self.array, 5, -math.inf, math.inf, 1)
             self.array = AImove[1]
 
             if len(AImove) == 3:
@@ -277,7 +277,7 @@ class EvEBoard:
                 return [self.dynamicHeuristic(node, maximizing), node]
 
         if maximizing:
-            v = -float("inf")
+            v = -math.inf
             bestBoard = []
             bestChoice = []
             for board in boards:
@@ -291,7 +291,7 @@ class EvEBoard:
                     break
             return [v, bestBoard, bestChoice]
         else:
-            v = float("inf")
+            v = math.inf
             bestBoard = []
             bestChoice = []
             for board in boards:
