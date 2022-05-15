@@ -625,11 +625,11 @@ def runMenu():
     for s in range(3):
         text = ""
         if s == 0:
-            text = "Random Go First"
+            text = "Against Random"
         elif s == 1:
-            text = "Random Go Second"
-        elif s == 2:
             text = "AI vs AI (1)"
+        elif s == 2:
+            text = "AI vs AI (2)"
         screen.create_text(150, s*100 + 280, anchor="center", text=text, font=("Consolas", 20), fill="#fff")
         for i in range(3):
             # Background
