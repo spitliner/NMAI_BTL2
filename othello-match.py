@@ -175,7 +175,7 @@ class EvEBoard:
                 AImove = self.MNABMove(self.array, 5, -float("inf"), float("inf"), 1)
             if self.won:
                 self.update()
-            
+
             if len(AImove) == 3:
                 self.array = AImove[1]
                 position = AImove[2]
@@ -298,7 +298,7 @@ class EvEBoard:
                 return [self.dynamicHeuristic(node, maximizing), node]
 
         if maximizing:
-            v = -float("inf")
+            v = -math.inf
             bestBoard = []
             bestChoice = []
             for board in boards:
@@ -312,7 +312,7 @@ class EvEBoard:
                     break
             return [v, bestBoard, bestChoice]
         else:
-            v = float("inf")
+            v = math.inf
             bestBoard = []
             bestChoice = []
             for board in boards:
@@ -518,19 +518,7 @@ class EvEBoard:
         # Convert all the appropriate tiles
         for node in convert:
             array[node[0]][node[1]] = colour
-
         return array
-
-    def checkCorner(self, array):
-        count = 0
-        for i in [0,7]:
-            for j in [0,7]:
-                if(array[i][j]):
-                    count+=1
-        return count
-    
-    def selectLevel(self, level):
-        self.level = level
     
 # Method for drawing the gridlines
 def drawGridBackground(outline=False):
