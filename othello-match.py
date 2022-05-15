@@ -4,8 +4,36 @@ import math
 import time
 import random
 from copy import deepcopy
+import tracemalloc
 
 from requests import delete
+
+def display_top(snapshot, key_type='lineno', limit=3):
+    snapshot = snapshot.filter_traces((
+        tracemalloc.Filter(False, "<frozen importlib._bootstrap>"),
+        tracemalloc.Filter(False, "<unknown>"),
+    ))
+    top_stats = snapshot.statistics(key_type)
+    """
+    print("Top %s lines" % limit)
+    for index, stat in enumerate(top_stats[:limit], 1):
+        frame = stat.traceback[0]
+        # replace "/path/to/module/file.py" with "module/file.py"
+        filename = os.sep.join(frame.filename.split(os.sep)[-2:])
+        print("#%s: %s:%s: %.1f KiB"
+              % (index, filename, frame.lineno, stat.size / 1024))
+        line = linecache.getline(frame.filename, frame.lineno).strip()
+        if line:
+            print('    %s' % line)
+
+    other = top_stats[limit:]
+    if other:
+        size = sum(stat.size for stat in other)
+        print("%s other: %.1f KiB" % (len(other), size / 1024))
+    """
+    total = sum(stat.size for stat in top_stats)
+    # print("Total allocated size: %.1f B" % total)
+    print(total)
 
 # Variable setup
 moves = 0
@@ -168,11 +196,14 @@ class EvEBoard:
             self.oldarray = self.array
             AImove = []
             if self.playerAI[self.player] == 0:
-                print("Random AI go !")
+                # print("Random AI go !")
                 AImove = self.randomMove(self.array)
             else:
-                print("AI", self.playerAI[self.player], " go !")
+                # print("AI", self.playerAI[self.player], " go !")
+                tracemalloc.start()
                 AImove = self.MNABMove(self.array, 5, -math.inf, math.inf, 1)
+                snapshot = tracemalloc.take_snapshot()
+                display_top(snapshot)
             if self.won:
                 self.update()
 
@@ -186,11 +217,11 @@ class EvEBoard:
 
             self.player = 1 - self.player
             if self.player == 0:
-                print(time.time(), starttime)
+                # print(time.time(), starttime)
                 self.e1 += time.time() - starttime
                 self.move1 += 1
             else:
-                print(time.time(), starttime)
+                # print(time.time(), starttime)
                 self.e2 += time.time() - starttime
                 self.move2 += 1
             self.drawScoreBoard()
@@ -199,13 +230,13 @@ class EvEBoard:
             self.passTest()
         else:
             message = None
-            print("Time Elapsed Player 1: ", self.e1, " Total Move: ", self.move1) 
-            print("Time Elapsed Player 2: ", self.e2, " Total Move: ", self.move2)
+            # print("Time Elapsed Player 1: ", self.e1, " Total Move: ", self.move1) 
+            # print("Time Elapsed Player 2: ", self.e2, " Total Move: ", self.move2)
             if self.player_score > self.computer_score:
-                print(self.player_score, self.computer_score, self.playerAI[0])
+                # print(self.player_score, self.computer_score, self.playerAI[0])
                 message = "Player 1: " + str(self.playerAI[0]) + " wins"
             else:
-                print(self.player_score, self.computer_score, self.playerAI[1])
+                # print(self.player_score, self.computer_score, self.playerAI[1])
                 message = "Player 2: " + str(self.playerAI[1]) + " wins"
             screen.create_text(250, 550, anchor="center", font=("Consolas", 15), text=message)
 
@@ -387,6 +418,14 @@ class EvEBoard:
                 elif array[x][y] == opponent:
                     score -= add
         return score
+
+    def checkCorner(self, array):
+        count = 0
+        for i in [0,7]:
+            for j in [0,7]:
+                if(array[i][j]):
+                    count+=1
+        return count
 
     # Seperating the use of heuristics for early / mid / late game.
     def dynamicHeuristic(self, array, player):
