@@ -172,7 +172,7 @@ class EvEBoard:
                 AImove = self.randomMove(self.array)
             else:
                 print("AI", self.playerAI[self.player], " go !")
-                AImove = self.MNABMove(self.array, 5, -float("inf"), float("inf"), 1)
+                AImove = self.MNABMove(self.array, 5, -math.inf, math.inf, 1)
             if self.won:
                 self.update()
 
