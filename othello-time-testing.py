@@ -349,7 +349,7 @@ class EvEBoard:
         return score
 
     # Less simple but still simple heuristic. Weights corners and edges as more
-    def betterHeuristic(self, array, player):
+    def betterHeuristic(self, array, max):
         score = 0
         
         # Set player and opponent colours
