@@ -272,7 +272,6 @@ class EvEBoard:
                     choices.append([x, y])
         # Chooses a random move, moves there
         if choices == []:
-            self.won = True
             return [None]
         randomChoice = random.choice(choices)
         return [0, self.move(node, randomChoice[0], randomChoice[1]), randomChoice]
