@@ -15,15 +15,6 @@ root = tkinter.Tk()
 screen = tkinter.Canvas(root, width=500, height=800, background="#222", highlightthickness=0)
 screen.pack()
 
-decentHeuristicMatrix = [
-            [100 , -10 , 8  ,  6 ,  6 , 8  , -10 ,  100],
-            [-10 , -25 ,  -4, -4 , -4 , -4 , -25 , -10 ],
-            [8   ,  -4 ,   6,   4,   4,   6,  -4 ,  8  ],
-            [6   ,  -4 ,   4,   0,   0,   4,  -4 ,  6  ],
-            [6   ,  -4 ,   4,   0,   0,   4,  -4 ,  6  ],
-            [8   ,  -4 ,   6,   4,   4,   6,  -4 ,  8  ],
-            [-10 , -25 ,  -4,  -4, -4 , -4 , -25 , -10 ],
-            [100 , -10 ,   8,   6,  6 , 8  , -10 ,  100]]
 betterHeuristicMatrix = [
             [   5,  -3 ,   3,   3,   3,   3,   -3,    5],
             [  -3,   -1,   1,   1,   1,   1,   -1,   -3],
@@ -33,6 +24,18 @@ betterHeuristicMatrix = [
             [   3,    1,   1,   1,   1,   1,    1,    3],
             [  -3,   -1,   1,   1,   1,   1,   -1,   -3],
             [   5,   -3,   3,   3,   3,   3,   -3,    5]]
+
+decentHeuristicMatrix = [
+            [100 , -10 , 8  ,  6 ,  6 , 8  , -10 ,  100],
+            [-10 , -25 ,  -4, -4 , -4 , -4 , -25 , -10 ],
+            [8   ,  -4 ,   6,   4,   4,   6,  -4 ,  8  ],
+            [6   ,  -4 ,   4,   0,   0,   4,  -4 ,  6  ],
+            [6   ,  -4 ,   4,   0,   0,   4,  -4 ,  6  ],
+            [8   ,  -4 ,   6,   4,   4,   6,  -4 ,  8  ],
+            [-10 , -25 ,  -4,  -4, -4 , -4 , -25 , -10 ],
+            [100 , -10 ,   8,   6,  6 , 8  , -10 ,  100]]
+
+
 
 class EvEBoard:
     def __init__(self, firstPlayer, secondPlayer):
@@ -173,10 +176,9 @@ class EvEBoard:
             else:
                 print("AI", self.playerAI[self.player], " go !")
                 AImove = self.MNABMove(self.array, 5, -float("inf"), float("inf"), 1)
-            if self.won:
-                self.update()
 
             if len(AImove) == 3:
+                print(AImove[0])
                 self.array = AImove[1]
                 position = AImove[2]
                 if self.player == 0:
@@ -271,7 +273,7 @@ class EvEBoard:
         # Chooses a random move, moves there
         if choices == []:
             self.won = True
-            return None
+            return [None]
         randomChoice = random.choice(choices)
         return [0, self.move(node, randomChoice[0], randomChoice[1]), randomChoice]
 
@@ -310,7 +312,7 @@ class EvEBoard:
                 alpha = max(alpha, v)
                 if beta <= alpha:
                     break
-            return [v, bestBoard, bestChoice]
+            return ([v, bestBoard, bestChoice])
         else:
             v = math.inf
             bestBoard = []
@@ -336,6 +338,7 @@ class EvEBoard:
         else:
             colour = "b"
             opponent = "w"
+        
         # +1 if it's player colour, -1 if it's opponent colour
         for x in range(8):
             for y in range(8):
@@ -348,17 +351,19 @@ class EvEBoard:
     # Less simple but still simple heuristic. Weights corners and edges as more
     def betterHeuristic(self, array, player):
         score = 0
+        
         # Set player and opponent colours
-        if player != 0:
+        if self.player != 0:
             colour = "w"
             opponent = "b"
         else:
             colour = "b"
             opponent = "w"
+            
         # Go through all the tiles
         for x in range(8):
             for y in range(8):
-                add=betterHeuristicMatrix[x][y]
+                add = betterHeuristicMatrix[x][y]
                 if array[x][y] == colour:
                     score += add
                 elif array[x][y] == opponent:
@@ -367,10 +372,10 @@ class EvEBoard:
 
     # Heuristic that weights corner tiles and edge tiles as positive, adjacent to corners (if the corner is not yours) as negative
     # Weights other tiles as one point
-    def decentHeuristic(self, array, player):
+    def decentHeuristic(self, array, max):
         score = 0
         # Set player and opponent colours
-        if player != 0:
+        if self.player != 0:
             colour = "w"
             opponent = "b"
         else:
@@ -520,6 +525,14 @@ class EvEBoard:
             array[node[0]][node[1]] = colour
         return array
     
+    def checkCorner(self, array):
+        count = 0
+        for i in [0,7]:
+            for j in [0,7]:
+                if(array[i][j]):
+                    count+=1
+        return count
+    
 # Method for drawing the gridlines
 def drawGridBackground(outline=False):
     # If we want an outline on the board then draw one
@@ -557,6 +570,16 @@ def clickHandle(event):
         if 400 <= yMouse <= 450:
             # One star
             if 25 <= xMouse <= 155:
+                playGame(0,1)
+            # Two star
+            elif 180 <= xMouse <= 310:
+                playGame(0,2)
+            # Three star
+            elif 335 <= xMouse <= 465:
+                playGame(0,3)
+        if 500 <= yMouse <= 550:
+            # One star
+            if 25 <= xMouse <= 155:
                 playGame(1,2)
             # Two star
             elif 180 <= xMouse <= 310:
@@ -564,7 +587,7 @@ def clickHandle(event):
             # Three star
             elif 335 <= xMouse <= 465:
                 playGame(3,1)
-        if 500 <= yMouse <= 550:
+        if 600 <= yMouse <= 650:
             # One star
             if 25 <= xMouse <= 155:
                 playGame(1,3)
@@ -610,13 +633,15 @@ def runMenu():
     screen.create_text(250, 200, anchor="center", text="Othello", font=("Consolas", 50), fill="#fff")
     
     # Creating the difficulty buttons
-    for s in range(3):
+    for s in range(4):
         text = ""
         if s == 0:
-            text = "Against Random"
+            text = "Against Random 1st"
         elif s == 1:
-            text = "AI vs AI (1)"
+            text = "Against Random 2nd"
         elif s == 2:
+            text = "AI vs AI (1)"
+        elif s == 3:
             text = "AI vs AI (2)"
         screen.create_text(150, s*100 + 280, anchor="center", text=text, font=("Consolas", 20), fill="#fff")
         for i in range(3):
