@@ -376,9 +376,9 @@ class EvEBoard:
                     if self.valid(array, player, x, y):
                         numMoves += 1
             return numMoves + self.decentHeuristic(array, player)
-        elif moves <= 52 and self.checkCorner(array) < 2:
+        elif moves <= 30 and self.checkCorner(array) < 2:
             return self.decentHeuristic(array, player)
-        elif moves <= 58 or self.checkCorner(array) < 4:
+        elif moves <= 40 or self.checkCorner(array) < 4:
             return (2 * self.decentHeuristic(array, player) + 3 * self.simpleHeuristic(array,player)) / 5
         else:
             return self.simpleHeuristic(array, player)

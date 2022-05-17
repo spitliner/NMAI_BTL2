@@ -277,7 +277,6 @@ class PvEBoard:
         return dumbChoice[0], dumbChoice[1]
 
     # Alpha - Beta pruning on the Mini - Max Tree
-    # http://en.wikipedia.org/wiki/Alpha%E2%80%93beta_pruning
     def MNABMove(self, node, depth, alpha, beta, maximizing):
         boards = []
         choices = []
@@ -398,9 +397,9 @@ class PvEBoard:
                     if self.valid(array, player, x, y):
                         numMoves += 1
             return numMoves + self.decentHeuristic(array, player)
-        elif moves <= 52 and self.checkCorner(array)<2:
+        elif moves <= 30 and self.checkCorner(array)<2:
             return self.decentHeuristic(array, player)
-        elif moves <= 58 or self.checkCorner(array)<4:
+        elif moves <= 40 or self.checkCorner(array)<4:
             return (2 * self.decentHeuristic(array, player) + 3 * self.simpleHeuristic(array,player)) / 5
         else:
             return self.simpleHeuristic(array, player)
@@ -585,13 +584,13 @@ def clickHandle(event):
         if 400 <= yMouse <= 450:
             # One star
             if 25 <= xMouse <= 155:
-                playGame(1,0)
+                playGame(1,1)
             # Two star
             elif 180 <= xMouse <= 310:
-                playGame(2,0)
+                playGame(1,2)
             # Three star
             elif 335 <= xMouse <= 465:
-                playGame(3,0)
+                playGame(1,3)
 
 def keyHandle(event):
     symbol = event.keysym
