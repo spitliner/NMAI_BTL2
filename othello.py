@@ -13,7 +13,7 @@ root = tkinter.Tk()
 screen = tkinter.Canvas(root, width=500, height=600, background="#222", highlightthickness=0)
 screen.pack()
 
-decentHeuristicMatrix = [
+AI2HeuristicMatrix = [
             [100 , -10 , 8  ,  6 ,  6 , 8  , -10 ,  100],
             [-10 , -25 ,  -4, -4 , -4 , -4 , -25 , -10 ],
             [8   ,  -4 ,   6,   4,   4,   6,  -4 ,  8  ],
@@ -22,7 +22,7 @@ decentHeuristicMatrix = [
             [8   ,  -4 ,   6,   4,   4,   6,  -4 ,  8  ],
             [-10 , -25 ,  -4,  -4, -4 , -4 , -25 , -10 ],
             [100 , -10 ,   8,   6,  6 , 8  , -10 ,  100]]
-betterHeuristicMatrix = [
+AI1HeuristicMatrix = [
             [   5,  -3 ,   3,   3,   3,   3,   -3,    5],
             [  -3,   -1,   1,   1,   1,   1,   -1,   -3],
             [   3,    1,   1,   1,   1,   1,    1,    3],
@@ -291,9 +291,9 @@ class PvEBoard:
         # Final Stand
         if depth == 0 or len(choices) == 0:
             if self.level == 1:
-                return [self.betterHeuristic(node, maximizing), node]
+                return [self.AI1Heuristic(node, maximizing), node]
             elif self.level == 2:
-                return [self.decentHeuristic(node, maximizing), node]
+                return [self.AI2Heuristic(node, maximizing), node]
             else:  # self.level == 3
                 return [self.dynamicHeuristic(node, maximizing), node]
 
@@ -346,7 +346,7 @@ class PvEBoard:
         return score
 
     # Less simple but still simple heuristic. Weights corners and edges as more
-    def betterHeuristic(self, array, player):
+    def AI1Heuristic(self, array, player):
         score = 0
         # Set player and opponent colours
         if self.player != 0:
@@ -358,7 +358,7 @@ class PvEBoard:
         # Go through all the tiles
         for x in range(8):
             for y in range(8):
-                add=betterHeuristicMatrix[x][y]
+                add=AI1HeuristicMatrix[x][y]
                 if array[x][y] == colour:
                     score += add
                 elif array[x][y] == opponent:
@@ -367,7 +367,7 @@ class PvEBoard:
 
     # Heuristic that weights corner tiles and edge tiles as positive, adjacent to corners (if the corner is not yours) as negative
     # Weights other tiles as one point
-    def decentHeuristic(self, array, player):
+    def AI2Heuristic(self, array, player):
         score = 0
         # Set player and opponent colours
         if player != 0:
@@ -381,7 +381,7 @@ class PvEBoard:
         for x in range(8):
             for y in range(8):
                 # Normal tiles worth 1
-                add = decentHeuristicMatrix[x][y]
+                add = AI2HeuristicMatrix[x][y]
                 if array[x][y] == colour:
                     score += add
                 elif array[x][y] == opponent:
@@ -396,11 +396,11 @@ class PvEBoard:
                 for y in range(8):
                     if self.valid(array, player, x, y):
                         numMoves += 1
-            return numMoves + self.decentHeuristic(array, player)
+            return numMoves + self.AI2Heuristic(array, player)
         elif moves <= 30 and self.checkCorner(array)<2:
-            return self.decentHeuristic(array, player)
+            return self.AI2Heuristic(array, player)
         elif moves <= 40 or self.checkCorner(array)<4:
-            return (2 * self.decentHeuristic(array, player) + 3 * self.simpleHeuristic(array,player)) / 5
+            return (2 * self.AI2Heuristic(array, player) + 3 * self.simpleHeuristic(array,player)) / 5
         else:
             return self.simpleHeuristic(array, player)
 
