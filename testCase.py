@@ -6,7 +6,7 @@ othello_ai = importlib.import_module("othello-space-testing")
 
 def main(argv):
     # print(int(argv[0]))
-    othello_ai.playGame(0, int(argv[0]))
+    othello_ai.playGame(int(argv[0]), 0)
 
 
 if __name__ == '__main__':

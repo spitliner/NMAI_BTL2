@@ -197,7 +197,7 @@ class EvEBoard:
                 snapshot = tracemalloc.take_snapshot()
                 tracemalloc.stop()
                 display_top(snapshot)
-            self.array = AImove[1]
+            if AImove: self.array = AImove[1]
 
             if len(AImove) == 3:
                 position = AImove[2]
@@ -219,8 +219,10 @@ class EvEBoard:
             message = None
             if self.player_score > self.computer_score:
                 message = "Player 1: " + str(self.playerAI[0]) + " wins"
+                print("player 1 win")
             else:
                 message = "Player 2: " + str(self.playerAI[1]) + " wins"
+                print("player 2 win")
             screen.create_text(250, 550, anchor="center", font=("Consolas", 15), text=message)
 
     # METHOD: Draws scoreboard to screen
@@ -283,6 +285,8 @@ class EvEBoard:
                 if self.valid(self.array, self.player, x, y):
                     choices.append([x, y])
         # Chooses a random move, moves there
+        if not choices:
+            return []
         randomChoice = random.choice(choices)
         return [0, self.move(node, randomChoice[0], randomChoice[1]), randomChoice]
 
