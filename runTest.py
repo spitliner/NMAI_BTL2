@@ -1,9 +1,14 @@
 import importlib
+import os
 import subprocess
 from time import sleep
 
 
 def main():
+    wd = os.path.join(os.getcwd(), 'memTestRead')
+    if not os.path.exists(wd):
+        os.makedirs(wd)
+        
     fileNamePrefix = 'memTestRead/memread'
     for i in range(3):
         fileNameBase = fileNamePrefix + str(i)

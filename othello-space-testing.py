@@ -224,6 +224,7 @@ class EvEBoard:
                 message = "Player 2: " + str(self.playerAI[1]) + " wins"
                 print("player 2 win")
             screen.create_text(250, 550, anchor="center", font=("Consolas", 15), text=message)
+            print(self.player_score, self.computer_score)
 
     # METHOD: Draws scoreboard to screen
     def drawScoreBoard(self):
