@@ -9,7 +9,7 @@ def main():
     if not os.path.exists(wd):
         os.makedirs(wd)
         
-    fileNamePrefix = 'memTestRead/memread'
+    fileNamePrefix =  os.path.join(wd, 'memread')
     for i in range(3):
         fileNameBase = fileNamePrefix + str(i)
         for ii in range(8):
